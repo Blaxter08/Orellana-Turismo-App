@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "418902423609",
+    "project_id": "turismo-app-efb1d",
+    "storage_bucket": "turismo-app-efb1d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:418902423609:android:63b51d9f2e6f2dd71cf5e8",
+        "android_client_info": {
+          "package_name": "com.orellana.turismo_app_orellana"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhWSuZ0zLf246CaxbIRpoRGlIomKjVobQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
