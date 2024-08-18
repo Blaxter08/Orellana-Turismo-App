@@ -1,60 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class CustomBottomNavigation extends StatelessWidget {
-  const CustomBottomNavigation({super.key});
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
-   int getCurrentIndex(BuildContext context){
-    final String location  = GoRouterState.of(context).matchedLocation;
-
-    switch(location){
-      case '/':
-        return 0;
-      case '/categories':
-        return 1;
-      case '/favorites':
-        return 2;
-      default:
-        return 0;
-    }
-  }
-  void onItemTapped(BuildContext context, int index){
-    switch(index){
-      case 0:
-        context.go('/');
-        break;
-        case 1:
-        context.go('/categories');
-        break;
-        case 2:
-        context.go('/favorites');
-        break;
-
-    }
-
-  }
+  const CustomBottomNavigation({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-        currentIndex: getCurrentIndex(context),
-        elevation: 0,
-        onTap: (index) => onItemTapped(context,index),
-        items: const[
-          BottomNavigationBarItem(
-              icon:Icon(Icons.home),
-              label:'Inicio'
-          ),
-          BottomNavigationBarItem(
-              icon:Icon(Icons.label_outline_sharp),
-              label:'Categorias'
-          ),
-          BottomNavigationBarItem(
-              icon:Icon(Icons.home),
-              label:'Favoritos'
-          ),
-
-        ]
+      selectedItemColor: Colors.green,
+      currentIndex: currentIndex,
+      elevation: 0,
+      onTap: onTap,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Inicio',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.label_outline_sharp),
+          label: 'Categorias',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite),
+          label: 'Favoritos',
+        ),
+      ],
     );
   }
 }

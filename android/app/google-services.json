@@ -12,7 +12,20 @@
           "package_name": "com.orellana.turismo_app_orellana"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "418902423609-ucfs73jf3e8q0e2m9blked16t9d4m27o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orellana.turismo_app_orellana",
+            "certificate_hash": "bacc50e5d3a2669d42c2390419cc44dd88d7d93c"
+          }
+        },
+        {
+          "client_id": "418902423609-u6darqbl1dbqc1pcl7sh0vucddhalp77.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAhWSuZ0zLf246CaxbIRpoRGlIomKjVobQ"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "418902423609-u6darqbl1dbqc1pcl7sh0vucddhalp77.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "418902423609-5uv961vl2ek3cfa5rjsc6thcmitd8dsm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.turismoApp"
+              }
+            }
+          ]
         }
       }
     }

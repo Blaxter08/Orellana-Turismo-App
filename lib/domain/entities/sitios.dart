@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Sitio {
+  final String idSitio;
   final String name;
   final String img;
   final String description;
@@ -12,6 +13,7 @@ class Sitio {
   String categoryName; // Campo para almacenar el nombre de la categoría
 
   Sitio({
+    required this.idSitio,
     required this.name,
     required this.direction,
     required this.puntuation,
@@ -27,6 +29,7 @@ class Sitio {
     final data = doc.data() as Map<String, dynamic>;
     final categoryRef = data['category'] as DocumentReference; // Obtener la referencia al documento de categoría
     return Sitio(
+      idSitio: data['idSitio'] ?? '',
       name: data['name'] ?? '',
       direction: data['direction'] ?? '',
       puntuation: data['puntuation'] ?? 0,

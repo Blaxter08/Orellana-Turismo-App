@@ -2,7 +2,8 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:turismo_app/domain/entities/entities.dart';
 
-import '../../providers/sitios/sitios_firestore.dart';
+import '../../../infrastructure/providers/sitios/sitios_firestore.dart';
+
 import '../../screens/screens.dart'; // Importa la pantalla de detalle del evento
 
 class EventsSlideShow extends StatelessWidget {
@@ -24,51 +25,50 @@ class EventsSlideShow extends StatelessWidget {
           List<Evento>? eventos = snapshot.data;
           return eventos != null && eventos.isNotEmpty
               ? Column(
-               crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 20
-                    ),
-                    child: Text(
-                      'Eventos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colors.primary,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20),
+                      child: Text(
+                        'Eventos',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                              height: 150,
-                              child: Swiper(
-                  pagination: SwiperPagination(
-                    margin: const EdgeInsets.only(top: 0),
-                    builder: DotSwiperPaginationBuilder(
-                      activeColor: colors.primary,
-                      color: colors.secondary,
-                    ),
-                  ),
-                  viewportFraction: 0.8,
-                  scale: 0.6,
-                  // autoplay: true,
-                  itemCount: eventos.length,
-                  itemBuilder: (context, index) => GestureDetector(
-                    onTap: () {
-                      // Navega a la pantalla de detalles del evento
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EventDetailScreen(event: eventos[index]),
+                    SizedBox(
+                      height: 150,
+                      child: Swiper(
+                        pagination: SwiperPagination(
+                          margin: const EdgeInsets.only(top: 0),
+                          builder: DotSwiperPaginationBuilder(
+                            activeColor: colors.primary,
+                            color: colors.secondary,
+                          ),
                         ),
-                      );
-                    },
-                    child: _Slide(evento: eventos[index]),
-                  ),
+                        viewportFraction: 0.8,
+                        scale: 0.6,
+                        // autoplay: true,
+                        itemCount: eventos.length,
+                        itemBuilder: (context, index) => GestureDetector(
+                          onTap: () {
+                            // Navega a la pantalla de detalles del evento
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EventDetailScreen(event: eventos[index]),
                               ),
-                            ),
-                ],
-              )
+                            );
+                          },
+                          child: _Slide(evento: eventos[index]),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
               : SizedBox.shrink(); // Devuelve un widget sin ocupar espacio
         }
       },
