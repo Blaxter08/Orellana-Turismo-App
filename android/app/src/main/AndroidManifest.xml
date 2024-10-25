@@ -1,8 +1,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <queries>
+        <!-- If your app needs to query the availability of the Google Maps app -->
+        <package android:name="com.google.android.apps.maps" />
+    </queries>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-feature
+            android:glEsVersion="0x00020000"
+            android:required="true"/>
     <application
+
         android:label="turismo_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+                android:name="com.google.android.geo.API_KEY"
+                android:value="AIzaSyC4TLNJJisdPizdmwwEGSz23So48rNbVRQ"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -23,7 +37,10 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+
         </activity>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -1,0 +1,20 @@
+{
+  "settings": "Ajustes",
+  "changeLanguage": "Cambiar Idioma",
+  "changeTheme": "Cambiar Tema",
+  "selectLanguage": "Seleccionar Idioma",
+  "Lodging": "Hospedaje",
+  "establishmentsWithCategory": "Establishments - {category}",
+    "@establishmentsWithCategory": {
+      "description": "Title with the category name included",
+      "placeholders": {
+        "category": {}
+      }
+      },
+  "my_account":"Mi cuenta",
+  "Help":"Ayuda",
+  "Settings":"Ajustes",
+  "food_drinks":"Alimentacion",
+  "transport_tourism":"Transporte",
+  "tourist_routes":"Rutas Turísticas"
+}

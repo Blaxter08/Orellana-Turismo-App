@@ -2,40 +2,45 @@ import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../generated/l10n.dart';
+import '../../../main.dart';
+
 class AjustesScreen extends StatefulWidget {
   @override
   _AjustesScreenState createState() => _AjustesScreenState();
 }
 
 class _AjustesScreenState extends State<AjustesScreen> {
-  String _selectedLanguage = ''; // Variable para almacenar el idioma seleccionado
+  String _selectedLanguage = '';
 
   @override
   void initState() {
-    _loadSelectedLanguage(); // Cargar el idioma seleccionado al iniciar la pantalla
+    _loadSelectedLanguage();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ajustes'),
+        title: Text(localizations.settings),
       ),
       body: ListView(
         padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         children: [
           ListTile(
-            title: Text('Cambiar Idioma'),
+            title: Text(localizations.changeLanguage),
             subtitle: Text(_selectedLanguage),
             onTap: () => _showLanguageDialog(context),
           ),
           ListTile(
-            title: Text('Cambiar Tema'),
+            title: Text(localizations.changeTheme),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.nightlight_round), // Icono de sol
+                Icon(Icons.nightlight_round),
                 Switch(
                   value: AdaptiveTheme.of(context).mode == AdaptiveThemeMode.light,
                   onChanged: (bool value) {
@@ -46,38 +51,35 @@ class _AjustesScreenState extends State<AjustesScreen> {
                     }
                   },
                 ),
-                Icon(Icons.wb_sunny), // Icono de luna
+                Icon(Icons.wb_sunny),
               ],
             ),
           ),
-          // Resto de tu código...
         ],
       ),
     );
   }
 
-  // Método para cargar el idioma seleccionado desde SharedPreferences
   _loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String language = prefs.getString('language') ?? 'en'; // Por defecto, inglés
+    String language = prefs.getString('language') ?? 'en';
     setState(() {
       _selectedLanguage = language;
     });
   }
 
-  // Método para mostrar un diálogo con la lista de idiomas disponibles
   _showLanguageDialog(BuildContext context) {
+    final localizations = S.of(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Seleccionar Idioma'),
+          title: Text(localizations.selectLanguage),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _languageOption(context, 'Español', 'es'),
               _languageOption(context, 'English', 'en'),
-              // Agrega más opciones de idioma según sea necesario
             ],
           ),
         );
@@ -85,24 +87,22 @@ class _AjustesScreenState extends State<AjustesScreen> {
     );
   }
 
-  // Método para construir una opción de idioma en el diálogo
   Widget _languageOption(BuildContext context, String languageName, String languageCode) {
     return ListTile(
       title: Text(languageName),
       onTap: () {
         _changeLanguage(context, languageCode);
-        Navigator.pop(context); // Cerrar el diálogo después de seleccionar un idioma
+        Navigator.pop(context);
       },
     );
   }
 
-  // Método para cambiar el idioma y guardar la selección en SharedPreferences
   _changeLanguage(BuildContext context, String languageCode) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', languageCode);
+    MyApp.of(context)?.setLocale(Locale(languageCode));
     setState(() {
-      _selectedLanguage = languageCode; // Actualizar el idioma seleccionado en la pantalla
+      _selectedLanguage = languageCode;
     });
-    // Puedes añadir lógica adicional aquí, como recargar la interfaz de usuario para que los cambios surtan efecto
   }
 }

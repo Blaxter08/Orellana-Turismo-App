@@ -1,33 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:turismo_app/domain/entities/sitios.dart';
-import 'package:turismo_app/presentation/screens/sitios/sitios_custom_detail_screnn.dart';
+import 'package:turismo_app/domain/entities/establecimientos.dart'; // Cambiado a Establishment
+import 'package:turismo_app/presentation/screens/sitios/sitios_custom_detail_screnn.dart'; // Asegúrate de que esté importado correctamente
 import 'package:turismo_app/presentation/widgets/widgets.dart';
 import '../../../infrastructure/providers/sitios/comidas_bedidas_Notifier.dart';
-import '../../screens/screens.dart';// Importa el proveedor aquí
-
+import '../../screens/screens.dart';
 
 class ComidasBebidas_SlideShow extends ConsumerWidget {
   ComidasBebidas_SlideShow({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).colorScheme;
-    final sitiosAsyncValue = ref.watch(comidasBebidasSlideShowProvider); // Usa watch para acceder al proveedor
+    final sitiosAsyncValue = ref.watch(comidasBebidasSlideShowProvider);
 
     return sitiosAsyncValue.when(
-      loading: () => Center(
-        child: Container(
-          // width: 50,
-          // height: 50,
-          // decoration: BoxDecoration(
-          //   borderRadius: BorderRadius.circular(25),
-          //   border: Border.all(color: Color(0x47000000)),
-          // ),
-        ),
-      ),
+      loading: () => Center(child: CircularProgressIndicator()),
       error: (error, stackTrace) => Center(child: Text('Error: $error')),
-      data: (sitios) {
+      data: (establecimientos) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -47,19 +36,22 @@ class ComidasBebidas_SlideShow extends ConsumerWidget {
                 height: 150,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: sitios.length,
+                  itemCount: establecimientos.length,
                   itemBuilder: (context, index) {
-                    Sitio sitio = sitios[index];
+                    Establishment establishment = establecimientos[index] as Establishment;
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SitioCustomDetailScreen(sitio: sitio, sitioId: sitio.idSitio,),
+                            builder: (context) => EstablishmentDetailScreen(
+                              establishment: establishment,
+                              establishmentId: establishment.id,
+                            ),
                           ),
                         );
                       },
-                      child: _Slide(sitio: sitio),
+                      child: _Slide(establishment: establishment),
                     );
                   },
                 ),
@@ -72,13 +64,12 @@ class ComidasBebidas_SlideShow extends ConsumerWidget {
   }
 }
 
-
 class _Slide extends StatelessWidget {
-  final Sitio sitio;
+  final Establishment establishment;
 
   const _Slide({
     Key? key,
-    required this.sitio,
+    required this.establishment,
   }) : super(key: key);
 
   @override
@@ -105,14 +96,16 @@ class _Slide extends StatelessWidget {
                 height: 100,
                 width: 120,
                 placeholder: 'assets/jar-loading.gif',
-                image: sitio.img.isNotEmpty ? sitio.img : 'assets/no-image.png',
+                image: establishment.logoUrl.isNotEmpty
+                    ? establishment.logoUrl
+                    : 'assets/no-image.png',
                 fit: BoxFit.cover,
               ),
             ),
           ),
           SizedBox(height: 8),
           Text(
-            sitio.name,
+            establishment.nombre,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             textAlign: TextAlign.start,
           ),

@@ -1,111 +1,88 @@
-import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
-import 'package:turismo_app/domain/entities/entities.dart';
 
-import '../../../infrastructure/providers/sitios/sitios_firestore.dart';
+class EventosWidget extends StatelessWidget {
+  final List<dynamic> eventos; // Lista de eventos
 
-import '../../screens/screens.dart'; // Importa la pantalla de detalle del evento
-
-class EventsSlideShow extends StatelessWidget {
-  final FirestoreService firestoreService = FirestoreService();
-
-  EventsSlideShow({Key? key}) : super(key: key);
+  const EventosWidget({Key? key, required this.eventos}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return FutureBuilder<List<Evento>>(
-      future: firestoreService.getEvents(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          List<Evento>? eventos = snapshot.data;
-          return eventos != null && eventos.isNotEmpty
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        'Eventos',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: colors.primary,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 150,
-                      child: Swiper(
-                        pagination: SwiperPagination(
-                          margin: const EdgeInsets.only(top: 0),
-                          builder: DotSwiperPaginationBuilder(
-                            activeColor: colors.primary,
-                            color: colors.secondary,
-                          ),
-                        ),
-                        viewportFraction: 0.8,
-                        scale: 0.6,
-                        // autoplay: true,
-                        itemCount: eventos.length,
-                        itemBuilder: (context, index) => GestureDetector(
-                          onTap: () {
-                            // Navega a la pantalla de detalles del evento
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EventDetailScreen(event: eventos[index]),
-                              ),
-                            );
-                          },
-                          child: _Slide(evento: eventos[index]),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : SizedBox.shrink(); // Devuelve un widget sin ocupar espacio
-        }
-      },
-    );
-  }
-}
+    // Si no hay eventos, no retorna nada
+    if (eventos.isEmpty) {
+      return SizedBox.shrink(); // Retorna un widget vacío
+    }
 
-class _Slide extends StatelessWidget {
-  final Evento evento;
-
-  const _Slide({Key? key, required this.evento}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final decoration = BoxDecoration(
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black45,
-          blurRadius: 10,
-          offset: Offset(0, 10),
-        ),
-      ],
-    );
-    return Padding(
-      padding: EdgeInsets.only(bottom: 30),
-      child: DecoratedBox(
-        decoration: decoration,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: FadeInImage.assetNetwork(
-            placeholder: 'assets/jar-loading.gif', // Ruta de la imagen de carga
-            image: evento.img, // URL de la imagen del evento
-            fit: BoxFit.cover,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
+          child: Text(
+            "Próximos Eventos",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
         ),
-      ),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: eventos.length, // Muestra el número de eventos
+            itemBuilder: (context, index) {
+              final evento = eventos[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 10.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Container(
+                    width: 160,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 100,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                            image: DecorationImage(
+                              image: NetworkImage(evento['imageUrl']), // URL de la imagen del evento
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                evento['nombre'], // Nombre del evento
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                evento['fecha'], // Fecha del evento
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -9,27 +9,29 @@ class card_Container extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding:  EdgeInsets.symmetric(horizontal: 30),
-      child: Container(
-        width: double.infinity,
-        //height: 300,
-        padding: EdgeInsets.all(20),
-        decoration: _card_Container(
+      child: Card(
+        child: Container(
+          width: double.infinity,
+          //height: 300,
+          padding: EdgeInsets.all(20),
+          // decoration: _card_Container(),
+          child: this.child,
         ),
-        child: this.child,
       ),
     );
   }
-  BoxDecoration _card_Container() => BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(25),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black12,
-          blurRadius: 15,
-          offset: Offset(0,5),
-        )
-      ]
-
-  );
+  // BoxDecoration _card_Container() => BoxDecoration(
+  //     color: Colors.white,
+  //     borderRadius: BorderRadius.circular(25),
+  //     // border: Border(),
+  //     boxShadow: [
+  //       BoxShadow(
+  //         color: Colors.black12,
+  //         blurRadius: 15,
+  //         offset: Offset(0,5),
+  //       )
+  //     ]
+  //
+  // );
 }
 

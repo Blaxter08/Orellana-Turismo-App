@@ -1,18 +1,19 @@
-import 'package:adaptive_theme/adaptive_theme.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:expandable/expandable.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:turismo_app/domain/entities/sitios.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/widgets.dart';
+import '../../../domain/entities/establecimientos.dart';
 
-class SitioCustomDetailScreen extends StatelessWidget {
-  final Sitio sitio;
-  final String sitioId; // Agregar el ID del documento del sitio como parámetro
+class EstablishmentDetailScreen extends StatelessWidget {
+  final Establishment establishment;
+  final String establishmentId;
 
-  const SitioCustomDetailScreen({Key? key, required this.sitio, required this.sitioId}) : super(key: key);
+  const EstablishmentDetailScreen({
+    Key? key,
+    required this.establishment,
+    required this.establishmentId,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +21,13 @@ class SitioCustomDetailScreen extends StatelessWidget {
       body: CustomScrollView(
         physics: const ClampingScrollPhysics(),
         slivers: [
-          _CustomSliverAppBar(sitio: sitio),
+          _CustomSliverAppBar(establishment: establishment),
           SliverList(
             delegate: SliverChildBuilderDelegate(
-                  (context, index) => _SitioDetails(sitio: sitio, sitioId: sitioId), // Pasar el ID del documento del sitio
+                  (context, index) => _EstablishmentDetails(
+                establishment: establishment,
+                establishmentId: establishmentId,
+              ),
               childCount: 1,
             ),
           ),
@@ -33,22 +37,28 @@ class SitioCustomDetailScreen extends StatelessWidget {
   }
 }
 
-class _SitioDetails extends StatelessWidget {
-  final Sitio sitio;
+class _EstablishmentDetails extends StatelessWidget {
+  final Establishment establishment;
+  final String establishmentId;
 
-  const _SitioDetails({Key? key, required this.sitio, required String sitioId}) : super(key: key);
+  const _EstablishmentDetails({
+    Key? key,
+    required this.establishment,
+    required this.establishmentId,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final bool isOpen = true; // Suponiendo que siempre está abierto, ajusta según la lógica
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 20,),
+          SizedBox(height: 20),
           Text(
-            sitio.name,
+            establishment.nombre,
             style: TextStyle(
               fontSize: 25,
               fontWeight: FontWeight.bold,
@@ -63,7 +73,7 @@ class _SitioDetails extends StatelessWidget {
               SizedBox(width: 5),
               Expanded(
                 child: Text(
-                  sitio.direction,
+                  establishment.direccion,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -75,80 +85,59 @@ class _SitioDetails extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10,),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.start,
-          //   crossAxisAlignment: CrossAxisAlignment.end,
-          //   children: [
-          //     Icon(Icons.phone, color: Colors.green),
-          //     SizedBox(width: 5),
-          //     Expanded(
-          //       child: Text(
-          //         sitio.telefono,
-          //         maxLines: 1,
-          //         overflow: TextOverflow.ellipsis,
-          //         style: TextStyle(
-          //           fontSize: 17,
-          //           color: Colors.black38,
-          //           fontWeight: FontWeight.normal,
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
           SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildSocialMediaIcon('assets/whatsapp.png'),
-            _buildSocialMediaIcon('assets/facebook.png'),
-            _buildSocialMediaIcon('assets/instagram.png'),
-            _buildSocialMediaIcon('assets/tik-tok.png'),
-          ],
-        ),
-          // DescripcionWidget(description: sitio.description),
-          SizedBox(height: 10),
-          _buildTabBar(), // Agregamos el TabBar aquí
-        ],
-      ),
-    );
-  }
-  Widget _buildSocialMediaIcon(String imagePath) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        // color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade700.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 3,
-            offset: Offset(0, 2),
+          Row(
+            children: [
+              Icon(isOpen ? Icons.access_time : Icons.lock,
+                  color: isOpen ? Colors.green : Colors.red),
+              SizedBox(width: 5),
+              Text(
+                isOpen ? "Abierto ahora" : "Cerrado ahora",
+                style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
           ),
+          SizedBox(height: 10),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final latitude = establishment.coordenadas.latitud;
+              final longitude = establishment.coordenadas.longitud;
+
+              final Uri googleMapsUri = Uri.parse(
+                  'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+
+              if (await canLaunchUrl(googleMapsUri)) {
+                await launchUrl(googleMapsUri);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('No se pudo abrir Google Maps')));
+              }
+            },
+            icon: Icon(Icons.map),
+            label: Text('Ver en Google Maps'),
+          ),
+          SizedBox(height: 10),
+          _buildTabBar(),
+          SizedBox(height: 20),
+          _buildProductosWidget(establishment),  // Productos o Habitaciones según la categoría
+          SizedBox(height: 20),
+          _buildImagenesWidget(establishment),  // Muestra las imágenes
         ],
-      ),
-      child: ClipOval(
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.cover,
-        ),
       ),
     );
   }
-
 
   Widget _buildTabBar() {
     return DefaultTabController(
-      length: 3, // Número de pestañas
+      length: 3,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TabBar(
-            dividerColor: Colors.grey,
-            // labelColor: Colors.grey,
-            // unselectedLabelColor: Colors.grey,
             indicatorColor: Colors.green,
             tabs: [
               Tab(text: 'Descripción'),
@@ -158,13 +147,12 @@ class _SitioDetails extends StatelessWidget {
           ),
           SizedBox(height: 10),
           SizedBox(
-            height: 370, // Ajusta la altura según sea necesario
+            height: 200, // Ajusta la altura según sea necesario para acomodar el contenido
             child: TabBarView(
               children: [
-                DescripcionWidget(description: sitio.description),
-                _ServiciosWidget(servicios: sitio.services,),
-                // _ComentariosWidget(sitioId: sitio.,),
-                ComentariosWidget(sitioId: sitio.idSitio)
+                _DescripcionWidget(description: establishment.categoriaPrincipal),
+                _ServiciosWidget(servicios: establishment.servicios),
+                ComentariosWidget(establishmentId: establishmentId),
               ],
             ),
           ),
@@ -172,138 +160,174 @@ class _SitioDetails extends StatelessWidget {
       ),
     );
   }
-}
 
+  Widget _buildProductosWidget(Establishment establishment) {
+    String titulo = establishment.categoriaPrincipal == "Alimentación"
+        ? "Alimentos"
+        : "Habitaciones";
 
-
-class _DescripcionWidget extends StatelessWidget {
-  final String description;
-
-  const _DescripcionWidget({Key? key, required this.description}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(description, style: GoogleFonts.roboto(
-          fontSize:17,
-          color: Colors.grey,
-        ),
-        textAlign: TextAlign.justify,
-        ),
-      ],
-    );
-  }
-}
-class _ServiciosWidget extends StatelessWidget {
-  final List<String> servicios;
-
-  const _ServiciosWidget({Key? key, required this.servicios}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          titulo,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         SizedBox(height: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: servicios.map((servicio) {
-            return Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 20,
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: establishment.productos.map((producto) {
+            return Container(
+              width: 180,
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                SizedBox(width: 5),
-                Text(servicio, style: GoogleFonts.roboto(
-                  fontSize:17,
-                ),),
-              ],
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        producto.nombre,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        producto.descripcion,
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        '\$${producto.precio.toStringAsFixed(2)}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           }).toList(),
         ),
       ],
     );
   }
-}
 
-class DescripcionWidget extends StatefulWidget {
-  final String description;
-
-  const DescripcionWidget({Key? key, required this.description}) : super(key: key);
-
-  @override
-  _DescripcionWidgetState createState() => _DescripcionWidgetState();
-}
-
-class _DescripcionWidgetState extends State<DescripcionWidget> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildImagenesWidget(Establishment establishment) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 5),
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _expanded = !_expanded;
-            });
-          },
-          child: AnimatedCrossFade(
-            duration: Duration(milliseconds: 300),
-            firstChild: Text(
-              widget.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.justify,
-              style: GoogleFonts.roboto(
-                fontSize:17,
-                color:Colors.grey,
-              ),
-            ),
-            secondChild: Text(
-              widget.description,
-              textAlign: TextAlign.justify,
-              style: GoogleFonts.roboto(
-                fontSize:17,
-                color:Colors.grey,
-              ),
-            ),
-            crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+        Text(
+          'Imágenes',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: establishment.imagenes.map((imageUrl) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image.network(
+                    imageUrl,
+                    height: 120,
+                    width: 180,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
-        if (!_expanded)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _expanded = true;
-                  });
-                },
-                child: Text(
-                  "Leer más",
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-            ],
-          ),
-
       ],
     );
   }
 }
 
+class _DescripcionWidget extends StatelessWidget {
+  final String description;
+
+  const _DescripcionWidget({Key? key, required this.description})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          description,
+          style: GoogleFonts.roboto(
+            fontSize: 17,
+            color: Colors.grey,
+          ),
+          textAlign: TextAlign.justify,
+        ),
+      ],
+    );
+  }
+}
+
+class _ServiciosWidget extends StatelessWidget {
+  final List<Servicio> servicios;
+
+  const _ServiciosWidget({Key? key, required this.servicios}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: EdgeInsets.all(8.0),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, // Mostrar 2 tarjetas por fila
+        childAspectRatio: 3 / 2, // Relación de aspecto de las tarjetas
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+      ),
+      physics: NeverScrollableScrollPhysics(), // Evitar el scroll dentro del GridView
+      shrinkWrap: true, // Ajustar el tamaño del GridView según su contenido
+      itemCount: servicios.length,
+      itemBuilder: (context, index) {
+        final servicio = servicios[index];
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 24),
+                SizedBox(height: 8),
+                Text(
+                  servicio.nombre,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  servicio.descripcion,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class _CustomSliverAppBar extends StatelessWidget {
-  final Sitio sitio;
+  final Establishment establishment;
 
-  const _CustomSliverAppBar({Key? key, required this.sitio}) : super(key: key);
+  const _CustomSliverAppBar({Key? key, required this.establishment})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +342,7 @@ class _CustomSliverAppBar extends StatelessWidget {
           children: [
             SizedBox.expand(
               child: Image.network(
-                sitio.img,
+                establishment.logoUrl,
                 fit: BoxFit.cover,
               ),
             ),
@@ -344,7 +368,7 @@ class _CustomSliverAppBar extends StatelessWidget {
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashView extends StatefulWidget {
-  final VoidCallback onSplashFinished;
-
-  const SplashView({Key? key, required this.onSplashFinished}) : super(key: key);
+  const SplashView({Key? key}) : super(key: key);
 
   @override
   _SplashViewState createState() => _SplashViewState();
@@ -15,32 +14,28 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    // Llamamos a la función que verifica si el usuario ya está logueado
-    checkUserLoggedIn();
+    // Verificar si el usuario está logueado o si ha visto el tutorial
+    _checkAppFlow();
   }
 
-  Future<void> checkUserLoggedIn() async {
-    // Esperamos un breve período para simular la carga
-    await Future.delayed(Duration(seconds: 2));
-
-    // Verificamos si el UID del usuario está guardado en SharedPreferences
+  Future<void> _checkAppFlow() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool seenTutorial = prefs.getBool('seenTutorial') ?? false;
     final String? uid = prefs.getString('uid');
 
-    // Si el UID está presente, significa que el usuario ya está logueado
-    if (uid != null) {
-      // Navegamos directamente a la pantalla de inicio
-      print(uid);
-      context.go('/home');
+    await Future.delayed(Duration(seconds: 2)); // Simular una pequeña carga
+
+    if (!seenTutorial) {
+      context.go('/tutorial');
+    } else if (uid == null) {
+      context.go('/login');
     } else {
-      // Si el UID no está presente, ejecutamos la función proporcionada para finalizar la pantalla de Splash
-      widget.onSplashFinished();
+      context.go('/home');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Aquí puedes personalizar la apariencia de tu pantalla de Splash
     return Scaffold(
       body: Center(
         child: Padding(
@@ -48,11 +43,13 @@ class _SplashViewState extends State<SplashView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/COCA-VIVELO.png'),
-              SizedBox(height: 10,),
-              LinearProgressIndicator(color: Colors.green,),
-              // CircularProgressIndicator(color: Colors.green,), // Puedes reemplazar esto con tu propio indicador de carga
-              SizedBox(height: 20), // Puedes personalizar este texto según tus necesidades
+              Image.asset('assets/logos/GADMFO-03.png'),
+              SizedBox(height: 10),
+              SpinKitDualRing(
+                color: Colors.teal,
+                size: 40.0,
+              ),
+              SizedBox(height: 20),
             ],
           ),
         ),

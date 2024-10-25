@@ -1,4 +1,10 @@
 
+export 'package:turismo_app/presentation/widgets/promociones/promociones_widget.dart';
+
+export 'package:turismo_app/presentation/widgets/eventos/eventos_widget.dart';
+
+export 'package:turismo_app/presentation/widgets/establecimientos/CategoryItem.dart';
+
 export 'package:turismo_app/presentation/widgets/shared/comentarios_Widget.dart';
 
 export 'package:turismo_app/presentation/widgets/shared/customDrawer.dart';

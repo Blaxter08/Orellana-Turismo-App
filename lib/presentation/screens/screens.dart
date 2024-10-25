@@ -1,5 +1,11 @@
 
 
+export 'package:turismo_app/presentation/screens/establecimientos/EstablishmentsListScreen.dart';
+
+export 'package:turismo_app/presentation/screens/routes_list/route_details.dart';
+
+export 'package:turismo_app/presentation/screens/routes_list/route_list.dart';
+
 export 'package:turismo_app/presentation/screens/editar_cuenta/editar_cuenta.dart';
 
 export 'package:turismo_app/presentation/screens/ajustes/ajustes.dart';

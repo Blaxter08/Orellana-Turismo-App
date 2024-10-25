@@ -15,10 +15,10 @@ class Comentario {
 
   factory Comentario.fromMap(Map<String, dynamic> map) {
     return Comentario(
-      fecha: map['fecha'],
-      idSitio: map['idSitio'],
-      idUsuario: map['idUsuario'],
-      comentario: map['comentario'],
+      fecha: map['fecha'] ?? Timestamp.now(),
+      idSitio: map['idSitio'] ?? '',
+      idUsuario: map['idUsuario'] ?? '',
+      comentario: map['comentario'] ?? '',
     );
   }
 }

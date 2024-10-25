@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../../domain/entities/entities.dart';
 
 class ComentarioService {
@@ -9,7 +8,7 @@ class ComentarioService {
     try {
       await _firestore.collection('comentarios').add({
         'fecha': comentario.fecha,
-        'idSitio': comentario.idSitio,
+        'idEstablecimiento': comentario.idSitio,
         'idUsuario': comentario.idUsuario,
         'comentario': comentario.comentario,
       });
@@ -18,21 +17,11 @@ class ComentarioService {
     }
   }
 
-  Stream<List<Comentario>> getComentariosPorSitio(String sitioId) {
+  Stream<List<Comentario>> getComentariosPorEstablishment(String establishmentId) {
     return _firestore
         .collection('comentarios')
-        .where('idSitio', isEqualTo: sitioId)
+        .where('idEstablecimiento', isEqualTo: establishmentId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Comentario.fromMap(doc.data())).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => Comentario.fromMap(doc.data() as Map<String, dynamic>)).toList());
   }
 }
-
-// class ComentariosService {
-//   static Stream<List<Comentario>> getComentariosStream(String sitioId) {
-//     return FirebaseFirestore.instance
-//         .collection('comentarios')
-//         .where('idSitio', isEqualTo: sitioId)
-//         .snapshots()
-//         .map((snapshot) => snapshot.docs.map((doc) => Comentario.fromMap(doc.data())).toList());
-//   }
-// }

@@ -1,0 +1,20 @@
+{
+  "settings": "Settings",
+  "changeLanguage": "Change Language",
+  "changeTheme": "Change Theme",
+  "selectLanguage": "Select Language",
+  "Lodging": "Lodging",
+  "establishmentsWithCategory": "Establishments - {category}",
+    "@establishmentsWithCategory": {
+      "description": "Title with the category name included",
+      "placeholders": {
+        "category": {}
+      }
+      },
+  "my_account":"My account",
+  "Help":"Help",
+  "Settings":"Settings",
+  "food_drinks":"Food",
+  "transport_tourism":"Transport",
+  "tourist_routes":"Tourist Routes"
+}

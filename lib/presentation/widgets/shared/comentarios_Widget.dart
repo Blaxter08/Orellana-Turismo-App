@@ -2,47 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:turismo_app/config/theme/app_theme.dart';
-import 'package:turismo_app/infrastructure/providers/providers.dart';
 import '../../../domain/entities/entities.dart';
+import '../../../infrastructure/providers/providers.dart';
 
 class ComentariosWidget extends StatelessWidget {
-  final String sitioId;
+  final String establishmentId;
 
-  const ComentariosWidget({Key? key, required this.sitioId}) : super(key: key);
+  const ComentariosWidget({Key? key, required this.establishmentId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final comentariosService = ComentarioService();
 
     return StreamBuilder<List<Comentario>>(
-      stream: comentariosService.getComentariosPorSitio(sitioId),
+      stream: comentariosService.getComentariosPorEstablishment(establishmentId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          print(snapshot.error);
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return Center(child: CircularProgressIndicator());
         }
 
         final comentarios = snapshot.data ?? [];
-        if ( comentarios.isEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 70,),
-              Image.asset(
-                  height: 50,
-                  width: 50,
-                  'assets/extraviado.png'),
-              Text('Aun no hay comentarios!!', style: GoogleFonts.roboto(
-                fontSize:16,
-              ),),Text('Quieres ser el primero en comentar?', style: GoogleFonts.roboto(
-                fontSize:16,
-                fontWeight: FontWeight.bold,
-                color:Colors.green
-              ),),
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (comentarios.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 70),
+                    Image.asset('assets/extraviado.png', height: 50, width: 50),
+                    Text(
+                      'Aún no hay comentarios!!',
+                      style: GoogleFonts.roboto(fontSize: 16),
+                    ),
+                    Text(
+                      '¿Quieres ser el primero en comentar?',
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (comentarios.isNotEmpty)
               Expanded(
                 child: ListView.builder(
                   itemCount: comentarios.length,
@@ -52,25 +63,7 @@ class ComentariosWidget extends StatelessWidget {
                   },
                 ),
               ),
-              AgregarComentarioWidget(sitioId: sitioId),
-            ],
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: comentarios.length,
-                itemBuilder: (context, index) {
-                  final comentario = comentarios[index];
-                  return _buildComentarioItem(comentario);
-                },
-              ),
-            ),
-            AgregarComentarioWidget(sitioId: sitioId),
-            SizedBox(height: 5,)
+            AgregarComentarioWidget(establishmentId: establishmentId),
           ],
         );
       },
@@ -87,19 +80,19 @@ class ComentariosWidget extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[300], // Fondo gris del círculo
-                  shape: BoxShape.circle, // Forma de círculo
+                  color: Colors.grey[300],
+                  shape: BoxShape.circle,
                 ),
-                width: 50, // Ancho del círculo
-                height: 50, // Altura del círculo
+                width: 50,
+                height: 50,
               ),
               SizedBox(width: 10),
               Expanded(
                 child: Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300], // Fondo gris del contenedor
-                    borderRadius: BorderRadius.circular(20), // Bordes redondeados de 20px
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
@@ -110,11 +103,16 @@ class ComentariosWidget extends StatelessWidget {
           return Text('Error: ${snapshot.error}');
         }
 
-        final userData = snapshot.data?.data() as Map<String, dynamic>?; // Indica el tipo de dato esperado
+        final userData = snapshot.data?.data() as Map<String, dynamic>?;
 
         if (userData == null) {
           return Text('Usuario no encontrado');
         }
+
+        // Protección adicional para los valores nulos
+        final photoUrl = userData['photoUrl'] as String? ?? 'https://example.com/default_image.png';
+        final displayName = userData['displayName'] as String? ?? 'Usuario Anónimo';
+        final comentarioTexto = comentario.comentario ?? 'Sin comentarios';
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -122,27 +120,28 @@ class ComentariosWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundImage: NetworkImage(userData['photoUrl'] as String), // Asegúrate de que 'foto' es de tipo String
+                backgroundImage: NetworkImage(photoUrl),
               ),
               SizedBox(width: 10),
-              Container(
-                padding: EdgeInsets.all(10), // Añadimos un espacio alrededor del contenido
-                decoration: BoxDecoration(
-                  // color: ThemeData.light().primaryColorLight, // Fondo gris
-                  borderRadius: BorderRadius.circular(20), // Bordes redondeados de 20px
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userData['displayName'] as String, // Asegúrate de que 'nombre' es de tipo String
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(comentario.comentario),
-                  ],
+                      SizedBox(height: 5),
+                      Text(comentarioTexto),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -154,9 +153,9 @@ class ComentariosWidget extends StatelessWidget {
 }
 
 class AgregarComentarioWidget extends StatefulWidget {
-  final String sitioId;
+  final String establishmentId;
 
-  const AgregarComentarioWidget({Key? key, required this.sitioId}) : super(key: key);
+  const AgregarComentarioWidget({Key? key, required this.establishmentId}) : super(key: key);
 
   @override
   _AgregarComentarioWidgetState createState() => _AgregarComentarioWidgetState();
@@ -204,7 +203,7 @@ class _AgregarComentarioWidgetState extends State<AgregarComentarioWidget> {
         'comentario': comentarioTexto,
         'fecha': FieldValue.serverTimestamp(),
         'idUsuario': userId,
-        'idSitio': widget.sitioId,
+        'idEstablecimiento': widget.establishmentId,
       };
 
       FirebaseFirestore.instance.collection('comentarios').add(comentarioData);

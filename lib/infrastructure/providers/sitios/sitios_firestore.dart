@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../domain/entities/entities.dart';
+import '../../../domain/entities/establecimientos.dart';
+import '../../../domain/entities/eventos.dart';
 
 class FirestoreService {
-  final CollectionReference sitiosCollection = FirebaseFirestore.instance.collection('sitios');
+  final CollectionReference establecimientosCollection = FirebaseFirestore.instance.collection('establecimientos');
   final CollectionReference eventosCollection = FirebaseFirestore.instance.collection('eventos');
   final CollectionReference categoriasCollection = FirebaseFirestore.instance.collection('categories');
 
@@ -15,50 +16,38 @@ class FirestoreService {
           return data['name_cat'] as String;
         }
       }
-      return ''; // Si no se encuentra el campo 'name_cate' o el documento no existe
+      return ''; // Si no se encuentra el campo 'name_cat' o el documento no existe
     } catch (e) {
       print('Error al obtener el nombre de la categoría: $e');
       return ''; // Manejo de errores devolviendo una cadena vacía
     }
   }
 
-  Future<List<Sitio>> getSitesByCategory(String categoryName) async {
+  Future<List<Establishment>> getEstablishmentsByCategory(String categoryName) async {
     try {
       QuerySnapshot categoryQuerySnapshot = await categoriasCollection.where('name_cat', isEqualTo: categoryName).get();
       if (categoryQuerySnapshot.docs.isNotEmpty) {
         // Obtenemos la referencia al documento de la categoría
         DocumentReference categoryReference = categoryQuerySnapshot.docs.first.reference;
-        // Consultamos los sitios que tienen esa referencia como categoría
-        QuerySnapshot sitiosQuerySnapshot = await sitiosCollection.where('category', isEqualTo: categoryReference).get();
-        return sitiosQuerySnapshot.docs.map((doc) => Sitio.fromFirestore(doc)).toList();
+        // Consultamos los establecimientos que tienen esa referencia como categoría
+        QuerySnapshot establecimientosQuerySnapshot = await establecimientosCollection.where('category', isEqualTo: categoryReference).get();
+        return establecimientosQuerySnapshot.docs.map((doc) => Establishment.fromMap(
+            doc.id,
+            doc.data() as Map<String, dynamic>,
+            doc
+        )).toList();
       } else {
         return []; // Devuelve una lista vacía si no se encuentra la categoría
       }
     } catch (e) {
-      print('Error al obtener sitios por categoría: $e');
+      print('Error al obtener establecimientos por categoría: $e');
       return []; // Devuelve una lista vacía en caso de error
     }
   }
-  // Future<List<Sitio>> getSitesByCategories(List<String> categories) async {
-  //   try {
-  //     // Buscamos las referencias a los documentos de las categorías en base a los nombres proporcionados
-  //     QuerySnapshot categoryQuerySnapshot = await categoriasCollection.where('name_cat', whereIn: categories).get();
-  //
-  //     // Obtenemos las referencias de los documentos de categorías
-  //     List<DocumentReference> categoryReferences = categoryQuerySnapshot.docs.map((doc) => doc.reference).toList();
-  //
-  //     // Consultamos los sitios que tengan cualquiera de estas referencias como categoría
-  //     QuerySnapshot sitiosQuerySnapshot = await sitiosCollection.where('category', whereIn: categoryReferences).get();
-  //
-  //     return sitiosQuerySnapshot.docs.map((doc) => Sitio.fromFirestore(doc)).toList();
-  //   } catch (e) {
-  //     print('Error al obtener sitios por categorías: $e');
-  //     return []; // Devuelve una lista vacía en caso de error
-  //   }
-  // }
-  Future<List<Sitio>> getSitesByCategories(List<String> categories, {int limit = 10, int page = 1}) async {
+
+  Future<List<Establishment>> getEstablishmentsByCategories(List<String> categories, {int limit = 10, int page = 1}) async {
     try {
-      List<Sitio> sitios = [];
+      List<Establishment> establecimientos = [];
 
       // Calcula el índice de inicio para la paginación
       int startIndex = (page - 1) * limit;
@@ -69,43 +58,49 @@ class FirestoreService {
       // Obtenemos las referencias de los documentos de categorías
       List<DocumentReference> categoryReferences = categoryQuerySnapshot.docs.map((doc) => doc.reference).toList();
 
-      // Consultamos los sitios que tengan cualquiera de estas referencias como categoría, con límite y paginación
-      Query sitiosQuery = sitiosCollection.where('category', whereIn: categoryReferences).orderBy(FieldPath.documentId);
+      // Consultamos los establecimientos que tengan cualquiera de estas referencias como categoría, con límite y paginación
+      Query establecimientosQuery = establecimientosCollection.where('category', whereIn: categoryReferences).orderBy(FieldPath.documentId);
 
       // Obtener el documento de inicio
       DocumentSnapshot? startDocument;
       if (startIndex > 0) {
-        QuerySnapshot startQuerySnapshot = await sitiosQuery.limit(startIndex).get();
+        QuerySnapshot startQuerySnapshot = await establecimientosQuery.limit(startIndex).get();
         if (startQuerySnapshot.docs.isNotEmpty) {
           startDocument = startQuerySnapshot.docs.last;
         }
       }
 
       // Consultar los documentos después del documento de inicio
-      QuerySnapshot sitiosQuerySnapshot;
+      QuerySnapshot establecimientosQuerySnapshot;
       if (startDocument != null) {
-        sitiosQuerySnapshot = await sitiosQuery.startAfterDocument(startDocument).limit(limit).get();
+        establecimientosQuerySnapshot = await establecimientosQuery.startAfterDocument(startDocument).limit(limit).get();
       } else {
-        sitiosQuerySnapshot = await sitiosQuery.limit(limit).get();
+        establecimientosQuerySnapshot = await establecimientosQuery.limit(limit).get();
       }
 
-      sitios = sitiosQuerySnapshot.docs.map((doc) => Sitio.fromFirestore(doc)).toList();
-      return sitios;
+      establecimientos = establecimientosQuerySnapshot.docs.map((doc) => Establishment.fromMap(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+          doc // Pasar el DocumentSnapshot aquí
+      )).toList();
+
+      return establecimientos;
     } catch (e) {
-      print('Error al obtener sitios por categorías: $e');
+      print('Error al obtener establecimientos por categorías: $e');
       return []; // Devuelve una lista vacía en caso de error
     }
   }
 
-
-
-
-  Future<List<Sitio>> getSites() async {
+  Future<List<Establishment>> getEstablishments() async {
     try {
-      QuerySnapshot querySnapshot = await sitiosCollection.get();
-      return querySnapshot.docs.map((doc) => Sitio.fromFirestore(doc)).toList();
+      QuerySnapshot querySnapshot = await establecimientosCollection.get();
+      return querySnapshot.docs.map((doc) => Establishment.fromMap(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+          doc
+      )).toList();
     } catch (e) {
-      print('Error al obtener los sitios: $e');
+      print('Error al obtener los establecimientos: $e');
       return []; // Devuelve una lista vacía en caso de error
     }
   }
