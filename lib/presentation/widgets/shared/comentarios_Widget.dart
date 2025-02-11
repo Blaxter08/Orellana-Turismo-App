@@ -29,15 +29,17 @@ class ComentariosWidget extends StatelessWidget {
         final comentarios = snapshot.data ?? [];
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (comentarios.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Column(
+                  // mainAxisAlignment: MainAxisAlignment.center,
+
                   children: [
                     SizedBox(height: 70),
-                    Image.asset('assets/extraviado.png', height: 50, width: 50),
+                    Image.asset('assets/comentario.png', height: 50, width: 50),
                     Text(
                       'Aún no hay comentarios!!',
                       style: GoogleFonts.roboto(fontSize: 16),
@@ -47,7 +49,7 @@ class ComentariosWidget extends StatelessWidget {
                       style: GoogleFonts.roboto(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: Colors.teal,
                       ),
                     ),
                   ],
@@ -164,6 +166,16 @@ class AgregarComentarioWidget extends StatefulWidget {
 class _AgregarComentarioWidgetState extends State<AgregarComentarioWidget> {
   final TextEditingController _comentarioController = TextEditingController();
 
+  // Lista de palabras prohibidas para el filtro de comentarios
+  final List<String> palabrasProhibidas = [
+    'Puta',
+    'puta',
+    'p u t a',
+    'palabra2',
+    'palabra3',
+    // Agrega más palabras inapropiadas aquí
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -178,12 +190,10 @@ class _AgregarComentarioWidgetState extends State<AgregarComentarioWidget> {
                 borderRadius: BorderRadius.circular(20),
               ),
               suffixIcon: IconButton(
-                onPressed: () {
-                  agregarComentario();
-                },
+                onPressed: agregarComentario,
                 icon: Icon(
                   Icons.send,
-                  color: Colors.green,
+                  color: Colors.teal,
                 ),
               ),
             ),
@@ -196,26 +206,47 @@ class _AgregarComentarioWidgetState extends State<AgregarComentarioWidget> {
   void agregarComentario() {
     String comentarioTexto = _comentarioController.text.trim();
 
-    if (comentarioTexto.isNotEmpty) {
-      String userId = FirebaseAuth.instance.currentUser!.uid;
-
-      Map<String, dynamic> comentarioData = {
-        'comentario': comentarioTexto,
-        'fecha': FieldValue.serverTimestamp(),
-        'idUsuario': userId,
-        'idEstablecimiento': widget.establishmentId,
-      };
-
-      FirebaseFirestore.instance.collection('comentarios').add(comentarioData);
-
-      _comentarioController.clear();
-    } else {
+    if (comentarioTexto.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Por favor, escribe tu comentario antes de agregarlo.'),
         ),
       );
+      return;
     }
+
+    // Comprobar si el comentario contiene palabras prohibidas
+    bool contienePalabraProhibida = palabrasProhibidas.any((palabra) =>
+        comentarioTexto.toLowerCase().contains(palabra.toLowerCase()));
+
+    if (contienePalabraProhibida) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tu comentario contiene palabras inapropiadas.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Si el comentario es válido, procede a guardarlo en Firestore
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    Map<String, dynamic> comentarioData = {
+      'comentario': comentarioTexto,
+      'fecha': FieldValue.serverTimestamp(),
+      'idUsuario': userId,
+      'idEstablecimiento': widget.establishmentId,
+    };
+
+    FirebaseFirestore.instance.collection('comentarios').add(comentarioData);
+
+    _comentarioController.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Comentario agregado exitosamente.'),
+      ),
+    );
   }
 
   @override

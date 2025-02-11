@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:turismo_app/presentation/screens/Detalles%20Alojamiento%20Turistico/details_alojamiento_turistico_screen.dart';
 
 import '../../../infrastructure/providers/alojamiento Turistico/alojamiento_turistico_provider.dart';
 
@@ -37,7 +38,12 @@ class AlojamientosTuristicosGrid extends ConsumerWidget {
             final alojamiento = filtrados[index];
             return GestureDetector(
               onTap: () {
-                // Implementa la navegación o acción que desees al seleccionar el alojamiento
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AlojamientoDetailScreen(alojamiento: alojamiento),
+                  ),
+                );
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -109,6 +115,8 @@ class AlojamientosTuristicosGrid extends ConsumerWidget {
                                 fontSize: 14,
                               ),
                             ),
+                            const SizedBox(height: 4),
+                            _buildRatingStars(alojamiento.puntuacion),
                           ],
                         ),
                       ),
@@ -126,6 +134,25 @@ class AlojamientosTuristicosGrid extends ConsumerWidget {
     );
   }
 
+  // Método para mostrar estrellas de puntuación
+  Widget _buildRatingStars(double rating) {
+    int fullStars = rating.floor();
+    bool hasHalfStar = (rating - fullStars) > 0.5;
+
+    return Row(
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return Icon(Icons.star, color: Colors.amber, size: 16);
+        } else if (index == fullStars && hasHalfStar) {
+          return Icon(Icons.star_half, color: Colors.amber, size: 16);
+        } else {
+          return Icon(Icons.star_border, color: Colors.amber, size: 16);
+        }
+      }),
+    );
+  }
+
+  // Loader para la grilla mientras carga
   Widget _buildSkeletonLoader() {
     return GridView.builder(
       shrinkWrap: true,

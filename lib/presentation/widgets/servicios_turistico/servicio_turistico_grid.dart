@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../infrastructure/providers/servicios_turisticos/servicios_turisticos_provider.dart';
+import '../../screens/Detalles servicio turistico/details_servicios_screen.dart';
 
 class ServiciosTuristicosGrid extends ConsumerWidget {
   final String query;
@@ -37,7 +38,12 @@ class ServiciosTuristicosGrid extends ConsumerWidget {
             final servicio = filtrados[index];
             return GestureDetector(
               onTap: () {
-                // Implementa la navegación o acción que desees al seleccionar el servicio
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ServicioTuristicoDetailScreen(servicio: servicio,),
+                  ),
+                );
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -103,7 +109,7 @@ class ServiciosTuristicosGrid extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              servicio.direccion,
+                              servicio.subCategoria,
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 14,

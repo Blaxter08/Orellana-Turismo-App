@@ -8,12 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'generated/l10n.dart';
 import 'firebase_options.dart';
+import 'infrastructure/services/notificacion/notificacion_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Inicializa las notificaciones push
+  await NotificationService.initialize();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String languageCode = prefs.getString('language') ?? 'en';
@@ -52,6 +55,11 @@ class _MyAppState extends State<MyApp> {
     return AdaptiveTheme(
       light: ThemeData.light(),
       dark: ThemeData(
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.teal.shade600,
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
         brightness: Brightness.dark,
       ),
       initial: AdaptiveThemeMode.light,

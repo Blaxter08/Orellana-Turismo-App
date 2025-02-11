@@ -23,39 +23,52 @@ class _AjustesScreenState extends State<AjustesScreen> {
   Widget build(BuildContext context) {
     final localizations = S.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(localizations.settings),
-      ),
-      body: ListView(
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        children: [
-          ListTile(
-            title: Text(localizations.changeLanguage),
-            subtitle: Text(_selectedLanguage),
-            onTap: () => _showLanguageDialog(context),
+    return WillPopScope(
+      onWillPop: () async {
+        // Aquí puedes manejar cualquier lógica antes de salir.
+        // Por defecto, retorna `true` para permitir el retroceso.
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(localizations.settings),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back), // Botón para regresar
+            onPressed: () {
+              Navigator.pop(context); // Navegar hacia atrás
+            },
           ),
-          ListTile(
-            title: Text(localizations.changeTheme),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.nightlight_round),
-                Switch(
-                  value: AdaptiveTheme.of(context).mode == AdaptiveThemeMode.light,
-                  onChanged: (bool value) {
-                    if (value) {
-                      AdaptiveTheme.of(context).setLight();
-                    } else {
-                      AdaptiveTheme.of(context).setDark();
-                    }
-                  },
-                ),
-                Icon(Icons.wb_sunny),
-              ],
+        ),
+        body: ListView(
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          children: [
+            ListTile(
+              title: Text(localizations.changeLanguage),
+              subtitle: Text(_selectedLanguage),
+              onTap: () => _showLanguageDialog(context),
             ),
-          ),
-        ],
+            ListTile(
+              title: Text(localizations.changeTheme),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.nightlight_round),
+                  Switch(
+                    value: AdaptiveTheme.of(context).mode == AdaptiveThemeMode.light,
+                    onChanged: (bool value) {
+                      if (value) {
+                        AdaptiveTheme.of(context).setLight();
+                      } else {
+                        AdaptiveTheme.of(context).setDark();
+                      }
+                    },
+                  ),
+                  Icon(Icons.wb_sunny),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

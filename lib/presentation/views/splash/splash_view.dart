@@ -43,17 +43,38 @@ class _SplashViewState extends State<SplashView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/logos/GADMFO-03.png'),
-              SizedBox(height: 10),
+              // Imagen central
+              Image.asset(
+                'assets/logos/coca_vivelo.png',
+                height: 150, // Tamaño ajustado
+              ),
+              SizedBox(height: 20),
+              // Fila de dos imágenes más pequeñas
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/logos/GADMFO-03.png',
+                    height: 70, // Tamaño de las imágenes pequeñas
+                  ),
+                  SizedBox(width: 10), // Espacio entre las imágenes
+                  Image.asset(
+                    'assets/logos/RINCONES MÁGICOS imagen(2)-07-04.png',
+                    height: 70,
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              // Indicador de carga
               SpinKitDualRing(
                 color: Colors.teal,
                 size: 40.0,
               ),
-              SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
   }
-}
+  }
+

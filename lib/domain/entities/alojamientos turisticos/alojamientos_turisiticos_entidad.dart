@@ -1,73 +1,82 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class AlojamientoTuristico {
-  String id;
+  String? id; // Agregamos el campo id, opcional
   String nombre;
+  double puntuacion;
   String direccion;
-  String logo;
   List<String> telefonosMoviles;
-  String telefonoConvencional;
+  List<String> telefonosConvencionales;
   String sitioWeb;
-  String correo;
+  List<String> correos;
   Map<String, String> redesSociales;
   List<double> coordenadas;
+  String logo;
   List<String> imagenes;
   String categoriaPrincipal;
   String subCategoria;
-  DocumentSnapshot? documentSnapshot; // Campo opcional para DocumentSnapshot
+  String horaApertura;
+  String horaCierre;
 
   AlojamientoTuristico({
-    required this.id,
+    this.id, // El id es opcional al crear
     required this.nombre,
+    required this.puntuacion,
     required this.direccion,
-    required this.logo,
     required this.telefonosMoviles,
-    required this.telefonoConvencional,
+    required this.telefonosConvencionales,
     required this.sitioWeb,
-    required this.correo,
+    required this.correos,
     required this.redesSociales,
     required this.coordenadas,
+    required this.logo,
     required this.imagenes,
     required this.categoriaPrincipal,
     required this.subCategoria,
-    this.documentSnapshot, // Inicializar el snapshot como opcional
+    required this.horaApertura,
+    required this.horaCierre,
   });
 
-  // Convertir datos a JSON
+  // Convertir a JSON para Firestore
   Map<String, dynamic> toJson() {
     return {
       'nombre': nombre,
+      'puntuacion': puntuacion,
       'direccion': direccion,
-      'logo': logo,
       'telefonosMoviles': telefonosMoviles,
-      'telefonoConvencional': telefonoConvencional,
+      'telefonosConvencionales': telefonosConvencionales,
       'sitioWeb': sitioWeb,
-      'correo': correo,
+      'correos': correos,
       'redesSociales': redesSociales,
       'coordenadas': coordenadas,
+      'logo': logo,
       'imagenes': imagenes,
       'categoriaPrincipal': categoriaPrincipal,
       'subCategoria': subCategoria,
+      'horaApertura': horaApertura,
+      'horaCierre': horaCierre,
     };
   }
 
-  // Crear una instancia de AlojamientoTuristico desde JSON
-  factory AlojamientoTuristico.fromJson(Map<String, dynamic> json, String id, [DocumentSnapshot? snapshot]) {
+  // Crear una instancia de AlojamientoTuristico desde un JSON
+  factory AlojamientoTuristico.fromJson(Map<String, dynamic> json, String id) {
     return AlojamientoTuristico(
       id: id,
       nombre: json['nombre'] ?? '',
+      puntuacion: (json['puntuacion'] is int) // Convertir int a double si es necesario
+          ? (json['puntuacion'] as int).toDouble()
+          : (json['puntuacion'] ?? 0.0),
       direccion: json['direccion'] ?? '',
-      logo: json['logo'] ?? '',
       telefonosMoviles: List<String>.from(json['telefonosMoviles'] ?? []),
-      telefonoConvencional: json['telefonoConvencional'] ?? '',
+      telefonosConvencionales: List<String>.from(json['telefonosConvencionales'] ?? []),
       sitioWeb: json['sitioWeb'] ?? '',
-      correo: json['correo'] ?? '',
+      correos: List<String>.from(json['correos'] ?? []),
       redesSociales: Map<String, String>.from(json['redesSociales'] ?? {}),
-      coordenadas: List<double>.from((json['coordenadas'] as List).map((e) => e is int ? e.toDouble() : e)),
+      coordenadas: (json['coordenadas'] as List).map((e) => (e is int ? e.toDouble() : e as double)).toList(),
+      logo: json['logo'] ?? '',
       imagenes: List<String>.from(json['imagenes'] ?? []),
       categoriaPrincipal: json['categoriaPrincipal'] ?? '',
       subCategoria: json['subCategoria'] ?? '',
-      documentSnapshot: snapshot, // Asignar el snapshot si está presente
+      horaApertura: json['horaApertura'] ?? '',
+      horaCierre: json['horaCierre'] ?? '',
     );
   }
 }

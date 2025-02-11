@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:turismo_app/presentation/screens/Detalles%20Alimentos%20y%20Bebidas/details_alimentos_bebidas_screen.dart';
 
 import '../../../infrastructure/providers/alimentos y bebidas/alimentos_bebidas_providers.dart';
 
@@ -37,7 +38,12 @@ class AlimentosYBebidasGridList extends ConsumerWidget {
             final alimento = filtrados[index];
             return GestureDetector(
               onTap: () {
-                // Implementa la navegación o acción que desees al seleccionar el alimento
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AlimentosBebidasDetailScreen(alimentosYBebidas: alimento,),
+                  ),
+                );
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -103,7 +109,7 @@ class AlimentosYBebidasGridList extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              alimento.direccion,
+                              alimento.subCategoria,
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 14,

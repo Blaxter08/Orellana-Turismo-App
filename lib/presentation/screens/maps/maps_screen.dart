@@ -10,65 +10,158 @@ class MapScreenA extends StatefulWidget {
 }
 
 class _MapScreenAState extends State<MapScreenA> {
-  // Controlador del Google Map
   late GoogleMapController mapController;
 
-  // Posición inicial del mapa (ejemplo en Orellana, Ecuador)
   final LatLng _initialPosition = const LatLng(-0.466667, -76.983333);
-
-  // Lista de marcadores para los establecimientos
   final Set<Marker> _markers = {};
+  String _categoriaSeleccionada = 'Atractivos Turísticos';
+  String _searchQuery = '';
 
-  // Categoría seleccionada
-  String _categoriaSeleccionada = 'Hospedaje';
-
-  // Colección de Firestore para los establecimientos
-  final CollectionReference _establecimientosRef = FirebaseFirestore.instance.collection('establecimientos');
+  // Mapeo de categorías a colecciones en Firestore
+  final Map<String, String> _categoriasColecciones = {
+    'Atractivos Turísticos': 'atractivosTuristicos',
+    'Hospedaje': 'alojamientosTuristicos',
+    'Alimentación': 'alimentosYBebidas',
+    'Servicios': 'serviciosTuristicos',
+    'Turismo Comunitario': 'turismosComunitarios',
+  };
 
   @override
   void initState() {
     super.initState();
-    // Cargar los establecimientos de la categoría por defecto
-    _actualizarMarcadores('Hospedaje');
+    _actualizarMarcadores();
   }
 
-  // Método para obtener los establecimientos desde Firestore y actualizar los marcadores
-  Future<void> _actualizarMarcadores(String categoria) async {
-    // Limpiar los marcadores anteriores
+  Future<void> _actualizarMarcadores() async {
     setState(() {
       _markers.clear();
     });
 
-    // Consultar establecimientos por categoría en Firestore
-    QuerySnapshot querySnapshot = await _establecimientosRef
-        .where('categoria', isEqualTo: categoria)
-        .get();
+    final String? coleccion = _categoriasColecciones[_categoriaSeleccionada];
+    if (coleccion == null) return;
 
-    // Crear marcadores para cada establecimiento
-    for (var doc in querySnapshot.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      final double latitud = data['latitud']; // Campo latitud
-      final double longitud = data['longitud']; // Campo longitud
-      final String nombre = data['nombre'];
+    final CollectionReference establecimientosRef =
+    FirebaseFirestore.instance.collection(coleccion);
 
-      final Marker marker = Marker(
-        markerId: MarkerId(doc.id),
-        position: LatLng(latitud, longitud),
-        infoWindow: InfoWindow(
-          title: nombre,
-          snippet: '$categoria',
-        ),
-      );
+    try {
+      QuerySnapshot querySnapshot = await establecimientosRef.get();
 
-      setState(() {
-        _markers.add(marker);
-      });
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final String nombre = data['nombre'] ?? '';
+        final String logo = data['logo'] ?? '';
+        final String descripcion = data['descripcion'] ?? 'Sin descripción';
+        final List<dynamic> coordenadas = data['coordenadas'] ?? [0.0, 0.0];
+
+        // Verifica que las coordenadas tengan dos elementos (latitud y longitud)
+        if (coordenadas.length != 2) continue;
+
+        final double latitud = (coordenadas[0] as num).toDouble();
+        final double longitud = (coordenadas[1] as num).toDouble();
+
+        // Aplicar filtro de búsqueda
+        if (_searchQuery.isNotEmpty &&
+            !nombre.toLowerCase().contains(_searchQuery.toLowerCase())) {
+          continue;
+        }
+
+        final Marker marker = Marker(
+          markerId: MarkerId(doc.id),
+          position: LatLng(latitud, longitud),
+          infoWindow: InfoWindow(
+            title: nombre,
+            snippet: descripcion,
+          ),
+          onTap: () {
+            _showMarkerDetails(nombre, descripcion);
+          },
+        );
+
+        setState(() {
+          _markers.add(marker);
+        });
+      }
+    } catch (e) {
+      print('Error al cargar marcadores: $e');
     }
   }
 
-  // Método para cuando el mapa se carga
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+  }
+
+  void _showMarkerDetails(String nombre, String descripcion) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                nombre,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(descripcion),
+              SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Implementar lógica de ruta aquí
+                },
+                icon: Icon(Icons.directions),
+                label: Text("Ver ruta"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Buscar...',
+          prefixIcon: Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+          _actualizarMarcadores();
+        },
+      ),
+    );
+  }
+
+  Widget _buildCategoryButton(String categoria, IconData icon) {
+    final isSelected = _categoriaSeleccionada == categoria;
+    return ElevatedButton.icon(
+      onPressed: () {
+        setState(() {
+          _categoriaSeleccionada = categoria;
+        });
+        _actualizarMarcadores();
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.teal : Colors.grey.shade300,
+        foregroundColor: isSelected ? Colors.white : Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      icon: Icon(icon),
+      label: Text(categoria),
+    );
   }
 
   @override
@@ -76,23 +169,32 @@ class _MapScreenAState extends State<MapScreenA> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Mapa Interactivo'),
-        backgroundColor: Colors.teal,
+        // backgroundColor: Colors.teal,
       ),
       body: Column(
         children: [
-          // Fila de botones de categorías
+          _buildSearchBar(),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildCategoryButton('Hospedaje'),
-                _buildCategoryButton('Alimentación'),
-                _buildCategoryButton('Transporte'),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildCategoryButton('Atractivos Turísticos', Icons.place),
+                  SizedBox(width: 10,),
+                  _buildCategoryButton('Hospedaje', Icons.hotel),
+                  SizedBox(width: 10,),
+                  _buildCategoryButton('Alimentación', Icons.restaurant),
+                  SizedBox(width: 10,),
+                  _buildCategoryButton('Servicios', Icons.miscellaneous_services),
+                  SizedBox(width: 10,),
+                  _buildCategoryButton(
+                      'Turismo Comunitario', Icons.directions_boat),
+                ],
+              ),
             ),
           ),
-          // Mapa de Google
           Expanded(
             child: GoogleMap(
               onMapCreated: _onMapCreated,
@@ -108,28 +210,6 @@ class _MapScreenAState extends State<MapScreenA> {
           ),
         ],
       ),
-    );
-  }
-
-  // Método para construir los botones de categoría
-  Widget _buildCategoryButton(String categoria) {
-    final isSelected = _categoriaSeleccionada == categoria;
-    return ElevatedButton(
-      onPressed: () {
-        // Cambiar la categoría seleccionada y actualizar los marcadores
-        setState(() {
-          _categoriaSeleccionada = categoria;
-          _actualizarMarcadores(categoria);
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.teal : Colors.grey.shade300,
-        foregroundColor: isSelected ? Colors.white : Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      child: Text(categoria),
     );
   }
 }

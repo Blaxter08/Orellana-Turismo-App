@@ -7,7 +7,7 @@ export 'package:turismo_app/presentation/widgets/establecimientos/CategoryItem.d
 
 export 'package:turismo_app/presentation/widgets/shared/comentarios_Widget.dart';
 
-export 'package:turismo_app/presentation/widgets/shared/customDrawer.dart';
+export 'package:turismo_app/presentation/widgets/shared/custom%20drawer/customDrawer.dart';
 
 export 'package:turismo_app/presentation/widgets/ui/input_decoration.dart';
 

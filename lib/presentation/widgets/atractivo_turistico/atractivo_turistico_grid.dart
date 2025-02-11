@@ -113,7 +113,7 @@ class AtractivosGridList extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              atractivo.direccion,
+                              atractivo.subCategoria,
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 14,

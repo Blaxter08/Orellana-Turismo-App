@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:turismo_app/presentation/screens/Detalles%20Turismo%20Comunitario/details_turismo_comunitario.dart';
 
 import '../../../infrastructure/providers/turismo comunitario/turismo_comunitario_provider.dart';
 
@@ -38,7 +39,12 @@ class TurismoComunitarioGridList extends ConsumerWidget {
             final turismo = filtrados[index];
             return GestureDetector(
               onTap: () {
-                // Implementa la navegación o acción que desees al seleccionar el turismo comunitario
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TurismoComunitarioDetailScreen( turismoComunitario: turismo,),
+                  ),
+                );
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -108,7 +114,7 @@ class TurismoComunitarioGridList extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              turismo.direccion,
+                              turismo.tipoServicio,
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 14,

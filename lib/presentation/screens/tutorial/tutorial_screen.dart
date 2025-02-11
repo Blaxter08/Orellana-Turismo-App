@@ -20,7 +20,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
         children: [
           _buildPage(
             context,
-            'assets/tutorial1.png',
+            'assets/coca_vivelo.png',
             '¡Bienvenido a Coca-Vívelo!',
             'Explora, disfruta y descubre lo mejor de Orellana con nuestra app.',
           ),

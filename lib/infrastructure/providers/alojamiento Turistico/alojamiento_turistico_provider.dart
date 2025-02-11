@@ -3,14 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/entities/alojamientos turisticos/alojamientos_turisiticos_entidad.dart';
 import '../../services/alojamiento Turistico/alojamiento_turistico_service.dart';
 
-final alojamientoTuristicoService = AlojamientoTuristicoService();
+final alojamientoTuristicoServiceProvider = Provider((ref) => AlojamientoTuristicoService());
 
 class AlojamientosTuristicosNotifier extends StateNotifier<AsyncValue<List<AlojamientoTuristico>>> {
-  AlojamientosTuristicosNotifier() : super(const AsyncValue.loading()) {
+  AlojamientosTuristicosNotifier(this._service) : super(const AsyncValue.loading()) {
     _subscribeToAlojamientos();
   }
 
-  final AlojamientoTuristicoService _service = alojamientoTuristicoService;
+  final AlojamientoTuristicoService _service;
   List<AlojamientoTuristico> _currentAlojamientos = [];
   DocumentSnapshot? _lastDocument;
   bool _isFetching = false;
@@ -21,26 +21,27 @@ class AlojamientosTuristicosNotifier extends StateNotifier<AsyncValue<List<Aloja
         _currentAlojamientos = alojamientos;
         state = AsyncValue.data(_currentAlojamientos);
       },
-      onError: (error, stack) {
-        state = AsyncValue.error('Error al cargar los alojamientos turísticos: $error', stack);
+      onError: (error, stackTrace) {
+        state = AsyncValue.error('Error al cargar los alojamientos turísticos: $error', stackTrace);
       },
     );
   }
 
-  // Método para cargar más alojamientos con paginación
   Future<void> cargarMasAlojamientos() async {
-    if (_isFetching) return;
+    if (_isFetching) return; // Evitar múltiples solicitudes simultáneas
     _isFetching = true;
 
     try {
-      final nuevosAlojamientos = await _service.fetchMoreAlojamientos(_lastDocument);
-      if (nuevosAlojamientos.isNotEmpty) {
-        _lastDocument = nuevosAlojamientos.last.documentSnapshot;
+      // Fetch more alojamientos con paginación
+      final result = await _service.fetchMoreAlojamientos(_lastDocument);
+      if (result.isNotEmpty) {
+        _lastDocument = result.last['documentSnapshot']; // Guardar el último DocumentSnapshot
+        final nuevosAlojamientos = result.map((e) => e['data'] as AlojamientoTuristico).toList();
         _currentAlojamientos.addAll(nuevosAlojamientos);
         state = AsyncValue.data(_currentAlojamientos);
       }
-    } catch (e, stack) {
-      state = AsyncValue.error('Error al cargar más alojamientos turísticos: $e', stack);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error('Error al cargar más alojamientos turísticos: $error', stackTrace);
     } finally {
       _isFetching = false;
     }
@@ -48,5 +49,6 @@ class AlojamientosTuristicosNotifier extends StateNotifier<AsyncValue<List<Aloja
 }
 
 final alojamientosTuristicosProvider = StateNotifierProvider<AlojamientosTuristicosNotifier, AsyncValue<List<AlojamientoTuristico>>>((ref) {
-  return AlojamientosTuristicosNotifier();
+  final service = ref.read(alojamientoTuristicoServiceProvider);
+  return AlojamientosTuristicosNotifier(service);
 });

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:turismo_app/presentation/screens/introduccion/introduccion_screen.dart';
 import 'package:turismo_app/presentation/screens/screens.dart';
 import '../../presentation/screens/tutorial/tutorial_screen.dart';
 import '../../presentation/views/splash/splash_view.dart';
@@ -34,6 +35,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/guide',
+      builder: (context, state) => TouristGuideScreen(),
     ),
     GoRoute(
       path: '/ayuda',

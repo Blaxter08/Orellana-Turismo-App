@@ -9,7 +9,7 @@ class ServicioTuristicoService {
   Stream<List<ServicioTuristico>> fetchServiciosTuristicos() {
     return firestore.collection('serviciosTuristicos').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return ServicioTuristico.fromJson(doc.data() as Map<String, dynamic>);
+        return ServicioTuristico.fromJson(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -24,7 +24,7 @@ class ServicioTuristicoService {
 
     final querySnapshot = await query.get();
     return querySnapshot.docs.map((doc) {
-      return ServicioTuristico.fromJson(doc.data() as Map<String, dynamic>);
+      return ServicioTuristico.fromJson(doc.data() as Map<String, dynamic>, doc.id);
     }).toList();
   }
 }

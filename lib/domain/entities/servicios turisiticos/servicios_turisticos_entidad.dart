@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ServicioTuristico {
+  String id; // Asegúrate de definir el campo id.
   String nombre;
   String direccion;
   List<String> telefonosMoviles;
@@ -16,6 +17,7 @@ class ServicioTuristico {
   DocumentSnapshot? documentSnapshot; // Campo opcional para almacenar el DocumentSnapshot
 
   ServicioTuristico({
+    required this.id,
     required this.nombre,
     required this.direccion,
     required this.telefonosMoviles,
@@ -50,8 +52,9 @@ class ServicioTuristico {
   }
 
   // Crear una instancia de ServicioTuristico desde JSON
-  factory ServicioTuristico.fromJson(Map<String, dynamic> json, [DocumentSnapshot? snapshot]) {
+  factory ServicioTuristico.fromJson(Map<String, dynamic> json, String id) {
     return ServicioTuristico(
+      id: id,
       nombre: json['nombre'],
       direccion: json['direccion'],
       telefonosMoviles: List<String>.from(json['telefonosMoviles']),
@@ -64,7 +67,8 @@ class ServicioTuristico {
       imagenes: List<String>.from(json['imagenes']),
       categoriaPrincipal: json['categoriaPrincipal'],
       subCategoria: json['subCategoria'],
-      documentSnapshot: snapshot, // Asignar el DocumentSnapshot si está presente
+      // documentSnapshot: snapshot,
+      // Asignar el DocumentSnapshot si está presente
     );
   }
 }
