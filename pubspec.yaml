@@ -54,7 +54,7 @@ dependencies:
   intl_phone_field: ^3.2.0
   flutter_spinkit: ^5.2.1
   expandable: ^5.0.1
-  connectivity: ^3.0.6
+  connectivity_plus: ^5.0.2
   adaptive_theme: ^3.6.0
   image_picker: ^1.1.0
   firebase_storage: ^11.7.5

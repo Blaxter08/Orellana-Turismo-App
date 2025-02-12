@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.orellana.turismo_app_orellana"> <!-- ✅ Agregado el package -->
+          xmlns:tools="http://schemas.android.com/tools">
 
-    <queries>
+
+<queries>
         <package android:name="com.google.android.apps.maps" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -57,11 +58,13 @@
 
         <service
                 android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
-                android:exported="true">
+                android:exported="true"
+                tools:replace="android:exported">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
 
         <meta-data
                 android:name="flutterEmbedding"
