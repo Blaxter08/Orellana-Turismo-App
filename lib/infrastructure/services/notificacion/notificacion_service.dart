@@ -1,89 +1,40 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
-class NotificationService {
-  static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+class NotificacionesService {
+  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
-  /// 🔹 Inicializar Firebase Messaging y Notificaciones Locales
-  static Future<void> initialize() async {
-    // Solicitar permisos para recibir notificaciones
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+  static Future<void> configurarNotificaciones() async {
+    // Suscribir al topic "eventos"
+    await _messaging.subscribeToTopic("eventos");
+    print("✅ Usuario suscrito al topic 'eventos'");
 
-    print('Permisos de notificación: ${settings.authorizationStatus}');
+    // Manejar notificaciones cuando la app está en Foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("📩 Notificación recibida en Foreground: ${message.notification?.title}");
 
-    // Obtener y registrar el token en Firestore
-    String? token = await _firebaseMessaging.getToken();
-    print('FCM Token: $token');
-    if (token != null) {
-      await _guardarTokenEnFirestore(token);
-    }
+      // Mostrar un diálogo con la notificación
+      showDialog(
+        context: navigatorKey.currentState!.overlay!.context,
+        builder: (_) => AlertDialog(
+          title: Text(message.notification?.title ?? "Nueva Notificación"),
+          content: Text(message.notification?.body ?? "Tienes una nueva alerta."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(_).pop(),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
+    });
 
-    // 🔹 Manejar notificaciones en diferentes estados de la app
-    FirebaseMessaging.onMessage.listen(_onMessageReceived);
-    FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
-
-    // 🔹 Configurar notificaciones locales (cuando la app está en primer plano)
-    _configurarNotificacionesLocales();
-  }
-
-  /// 🔹 Guardar Token en Firestore
-  static Future<void> _guardarTokenEnFirestore(String token) async {
-    await FirebaseFirestore.instance.collection('user_tokens').doc(token).set(
-      {'token': token}, SetOptions(merge: true),
-    );
-    print("✅ Token guardado en Firestore");
-  }
-
-  /// 🔹 Manejar notificación cuando la app está en primer plano
-  static void _onMessageReceived(RemoteMessage message) {
-    print("📩 Notificación en Foreground: ${message.notification?.title}");
-
-    // 🔹 Mostrar una notificación local
-    _showLocalNotification(message);
-  }
-
-  /// 🔹 Manejar cuando el usuario toca la notificación y abre la app
-  static void _onMessageOpened(RemoteMessage message) {
-    print("🚀 Notificación tocada: ${message.data}");
-    // Aquí puedes hacer que la app navegue a una pantalla específica con message.data['evento_id']
-  }
-
-  /// 🔹 Configurar Notificaciones Locales (cuando la app está en Foreground)
-  static void _configurarNotificacionesLocales() {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    final InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-
-    _localNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  /// 🔹 Mostrar Notificación Local
-  static Future<void> _showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails('canal_principal', 'Notificaciones',
-        importance: Importance.max, priority: Priority.high, showWhen: false);
-    const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
-
-    await _localNotificationsPlugin.show(
-      0, // ID de la notificación
-      message.notification?.title,
-      message.notification?.body,
-      platformChannelSpecifics,
-    );
+    // Manejar notificaciones en Background
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("📲 Notificación abierta desde Background: ${message.notification?.title}");
+    });
   }
 }
+
+// Clave Global para acceder al contexto de la app
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

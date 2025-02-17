@@ -3,28 +3,23 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-exports.onEventChange = functions.firestore
-  .document("events/{eventId}")
-  .onWrite(async (change, context) => {
-    const before = change.before.exists ? change.before.data() : null;
-    const after = change.after.exists ? change.after.data() : null;
+exports.enviarNotificacionEvento = functions.firestore
+  .document("eventos/{eventoId}")
+  .onUpdate(async (change, context) => {
+    const eventoAntes = change.before.data();
+    const eventoDespues = change.after.data();
 
-    // Verifica si el evento fue activado
-    if (!before?.isActive && after?.isActive) {
-      const payload = {
+    // Solo enviamos la notificación si isActive cambió de false a true
+    if (!eventoAntes.isActive && eventoDespues.isActive) {
+      const mensaje = {
         notification: {
-          title: "Nuevo Evento Activo",
-          body: `¡${after.title} está disponible ahora!`,
-          clickAction: "FLUTTER_NOTIFICATION_CLICK",
+          title: "Nuevo Evento Disponible 🎉",
+          body: `¡${eventoDespues.nombre} ha sido activado!`,
         },
-        topic: "events",
+        topic: "eventos", // Suscribimos a todos los usuarios a este topic
       };
 
-      try {
-        await admin.messaging().send(payload);
-        console.log("Notificación enviada para el evento:", after.title);
-      } catch (error) {
-        console.error("Error al enviar la notificación:", error);
-      }
+      await admin.messaging().send(mensaje);
+      console.log("Notificación enviada a eventos");
     }
   });

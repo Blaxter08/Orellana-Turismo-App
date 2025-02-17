@@ -1,4 +1,5 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'generated/l10n.dart';
 import 'firebase_options.dart';
 import 'infrastructure/services/notificacion/notificacion_service.dart';
+import 'infrastructure/services/notificacion/notificaciones_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +18,19 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   // Inicializa las notificaciones push
-  await NotificationService.initialize();
+  // await NotificationService.initialize();
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  // Solicitar permisos en iOS
+  await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // Obtener y mostrar el token FCM del dispositivo (para pruebas)
+  String? token = await messaging.getToken();
+  print("🔑 Token FCM del dispositivo: $token");
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String languageCode = prefs.getString('language') ?? 'en';
