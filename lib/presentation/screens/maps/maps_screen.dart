@@ -1,119 +1,111 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../infrastructure/providers/map/map_provider.dart';
+import '../../../infrastructure/services/localizacion/location_service.dart';
 
-class MapScreenA extends StatefulWidget {
+class MapScreenA extends ConsumerStatefulWidget {
   const MapScreenA({Key? key}) : super(key: key);
 
   @override
   _MapScreenAState createState() => _MapScreenAState();
 }
 
-class _MapScreenAState extends State<MapScreenA> {
-  late GoogleMapController mapController;
+class _MapScreenAState extends ConsumerState<MapScreenA> {
+  GoogleMapController? _mapController;
+  LatLng? _currentPosition; // Será nulo hasta obtener la ubicación real
+  bool _isLoadingLocation = true;
 
-  final LatLng _initialPosition = const LatLng(-0.466667, -76.983333);
-  final Set<Marker> _markers = {};
-  String _categoriaSeleccionada = 'Atractivos Turísticos';
-  String _searchQuery = '';
-
-  // Mapeo de categorías a colecciones en Firestore
-  final Map<String, String> _categoriasColecciones = {
-    'Atractivos Turísticos': 'atractivosTuristicos',
-    'Hospedaje': 'alojamientosTuristicos',
-    'Alimentación': 'alimentosYBebidas',
-    'Servicios': 'serviciosTuristicos',
-    'Turismo Comunitario': 'turismosComunitarios',
-  };
+  String? _selectedName;
+  String? _selectedDescription;
+  String? _selectedAddress;
+  double? _selectedRating;
+  String? _selectedImage;
+  LatLng? _selectedPosition;
 
   @override
   void initState() {
     super.initState();
-    _actualizarMarcadores();
+    _getUserLocation();
   }
 
-  Future<void> _actualizarMarcadores() async {
-    setState(() {
-      _markers.clear();
-    });
-
-    final String? coleccion = _categoriasColecciones[_categoriaSeleccionada];
-    if (coleccion == null) return;
-
-    final CollectionReference establecimientosRef =
-    FirebaseFirestore.instance.collection(coleccion);
-
+  /// Obtiene la ubicación del usuario y actualiza `_currentPosition`
+  Future<void> _getUserLocation() async {
+    final locationService = LocationService();
     try {
-      QuerySnapshot querySnapshot = await establecimientosRef.get();
-
-      for (var doc in querySnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final String nombre = data['nombre'] ?? '';
-        final String logo = data['logo'] ?? '';
-        final String descripcion = data['descripcion'] ?? 'Sin descripción';
-        final List<dynamic> coordenadas = data['coordenadas'] ?? [0.0, 0.0];
-
-        // Verifica que las coordenadas tengan dos elementos (latitud y longitud)
-        if (coordenadas.length != 2) continue;
-
-        final double latitud = (coordenadas[0] as num).toDouble();
-        final double longitud = (coordenadas[1] as num).toDouble();
-
-        // Aplicar filtro de búsqueda
-        if (_searchQuery.isNotEmpty &&
-            !nombre.toLowerCase().contains(_searchQuery.toLowerCase())) {
-          continue;
-        }
-
-        final Marker marker = Marker(
-          markerId: MarkerId(doc.id),
-          position: LatLng(latitud, longitud),
-          infoWindow: InfoWindow(
-            title: nombre,
-            snippet: descripcion,
-          ),
-          onTap: () {
-            _showMarkerDetails(nombre, descripcion);
-          },
-        );
-
-        setState(() {
-          _markers.add(marker);
-        });
-      }
+      final posicion = await locationService.getCurrentLocation();
+      setState(() {
+        _currentPosition = LatLng(posicion.latitude, posicion.longitude);
+        _isLoadingLocation = false;
+      });
+      print("📍 Ubicación actual del usuario: $_currentPosition");
     } catch (e) {
-      print('Error al cargar marcadores: $e');
+      print("❌ Error obteniendo la ubicación: $e");
+      setState(() {
+        _isLoadingLocation = false;
+      });
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+  /// Mueve la cámara a la ubicación actual del usuario
+  void _moveToUserLocation() {
+    if (_mapController != null && _currentPosition != null) {
+      _mapController!.animateCamera(CameraUpdate.newLatLngZoom(
+        _currentPosition!,
+        14.0,
+      ));
+    }
   }
 
-  void _showMarkerDetails(String nombre, String descripcion) {
+  /// Función que se ejecuta al crear el mapa
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _moveToUserLocation();
+  }
+
+  /// Muestra el panel emergente con información del marcador
+  void _showMarkerDetails() {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
+        return Container(
+          padding: const EdgeInsets.all(16),
+          height: 300,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                nombre,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                _selectedName ?? "Lugar sin nombre",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
-              Text(descripcion),
-              SizedBox(height: 10),
+              const SizedBox(height: 8),
+              if (_selectedImage != null && _selectedImage!.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    _selectedImage!,
+                    height: 100,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Text(_selectedDescription ?? "Sin descripción disponible."),
+              const SizedBox(height: 6),
+              Text("📍 Dirección: ${_selectedAddress ?? 'No especificada'}"),
+              if (_selectedRating != null)
+                Text("⭐ Puntuación: ${_selectedRating!.toStringAsFixed(1)}"),
+              const SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Implementar lógica de ruta aquí
-                },
-                icon: Icon(Icons.directions),
-                label: Text("Ver ruta"),
+                onPressed: _selectedPosition != null ? _openGoogleMaps : null,
+                icon: const Icon(Icons.directions),
+                label: const Text("Cómo llegar"),
+                // style: ElevatedButton.styleFrom(backgroundColor: Colors.white10),
               ),
             ],
           ),
@@ -122,93 +114,153 @@ class _MapScreenAState extends State<MapScreenA> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: 'Buscar...',
-          prefixIcon: Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-        ),
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value;
-          });
-          _actualizarMarcadores();
-        },
-      ),
-    );
-  }
+  /// Abre Google Maps con la ruta al marcador seleccionado
+  void _openGoogleMaps() async {
+    if (_selectedPosition == null) return;
 
-  Widget _buildCategoryButton(String categoria, IconData icon) {
-    final isSelected = _categoriaSeleccionada == categoria;
-    return ElevatedButton.icon(
-      onPressed: () {
-        setState(() {
-          _categoriaSeleccionada = categoria;
-        });
-        _actualizarMarcadores();
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.teal : Colors.grey.shade300,
-        foregroundColor: isSelected ? Colors.white : Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      icon: Icon(icon),
-      label: Text(categoria),
-    );
+    String googleMapsUrl =
+        "https://www.google.com/maps/dir/?api=1&destination=${_selectedPosition!.latitude},${_selectedPosition!.longitude}";
+    if (await canLaunch(googleMapsUrl)) {
+      await launch(googleMapsUrl);
+    } else {
+      print("❌ No se pudo abrir Google Maps");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Mientras _currentPosition sea nulo, se muestra el indicador de carga.
+    if (_currentPosition == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final marcadoresAsync = ref.watch(marcadoresProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mapa Interactivo'),
-        // backgroundColor: Colors.teal,
+        title: const Text('Mapa Interactivo'),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          _buildSearchBar(),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildCategoryButton('Atractivos Turísticos', Icons.place),
-                  SizedBox(width: 10,),
-                  _buildCategoryButton('Hospedaje', Icons.hotel),
-                  SizedBox(width: 10,),
-                  _buildCategoryButton('Alimentación', Icons.restaurant),
-                  SizedBox(width: 10,),
-                  _buildCategoryButton('Servicios', Icons.miscellaneous_services),
-                  SizedBox(width: 10,),
-                  _buildCategoryButton(
-                      'Turismo Comunitario', Icons.directions_boat),
-                ],
-              ),
+          GoogleMap(
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _currentPosition!,
+              zoom: 14.0,
+            ),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            markers: marcadoresAsync.when(
+              data: (marcadores) {
+                return Set<Marker>.from(marcadores.map((marker) {
+                  return marker.copyWith(
+                    onTapParam: () {
+                      setState(() {
+                        _selectedName = marker.infoWindow.title;
+                        _selectedDescription = marker.infoWindow.snippet;
+                        _selectedPosition = marker.position;
+                      });
+                      _showMarkerDetails();
+                    },
+                  );
+                }));
+              },
+              loading: () {
+                return {};
+              },
+              error: (err, stack) {
+                print("❌ Error al cargar marcadores: $err");
+                return {};
+              },
             ),
           ),
-          Expanded(
-            child: GoogleMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-                target: _initialPosition,
-                zoom: 12.0,
-              ),
-              markers: _markers,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              zoomControlsEnabled: false,
-            ),
-          ),
+          _buildCategorySelector(ref),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _moveToUserLocation,
+        backgroundColor: Colors.teal,
+        child: const Icon(Icons.my_location, color: Colors.white),
+      ),
+    );
+  }
+
+  /// Construye los botones de selección de categorías con mejor diseño y animaciones
+  Widget _buildCategorySelector(WidgetRef ref) {
+    final categorias = [
+      {"nombre": "Atractivos Turísticos", "icon": FontAwesomeIcons.mapMarkedAlt, "color": Colors.green},
+      {"nombre": "Hospedaje", "icon": FontAwesomeIcons.hotel, "color": Colors.blue},
+      {"nombre": "Alimentación", "icon": FontAwesomeIcons.utensils, "color": Colors.orange},
+      {"nombre": "Servicios", "icon": FontAwesomeIcons.cogs, "color": Colors.purple},
+      {"nombre": "Turismo Comunitario", "icon": FontAwesomeIcons.solidHandshake, "color": Colors.teal},
+    ];
+
+    final selectedCategory = ref.watch(categoriaProvider);
+
+    return Positioned(
+      top: 10,
+      left: 10,
+      right: 10,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: categorias.map((categoria) {
+            final isSelected = selectedCategory == (categoria["nombre"] as String);
+            final Color categoriaColor = categoria["color"] as Color;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                decoration: BoxDecoration(
+                  color: isSelected ? categoriaColor : Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () {
+                    ref.read(categoriaProvider.notifier).state = categoria["nombre"] as String;
+                    print("🔄 Cambiando categoría a: ${categoria["nombre"]}");
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          categoria["icon"] as IconData,
+                          color: isSelected ? Colors.white : categoriaColor,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          categoria["nombre"] as String,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : categoriaColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

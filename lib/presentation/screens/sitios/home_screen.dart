@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Lista de pantallas, ahora con la nueva pantalla de Mapa
   final List<Widget> _views = [
     HomeScreenView(),      // Pantalla principal
-    CategoriesScreen(),    // Pantalla de categorías
+    // CategoriesScreen(),    // Pantalla de categorías
     // FavoriteScreen(),      // Pantalla de favoritos
     MapScreenA(),           // Pantalla del mapa
   ];
@@ -53,10 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.home),
             label: 'Inicio',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category_outlined),
-            label: 'Categorias',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.category_outlined),
+          //   label: 'Categorias',
+          // ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.favorite),
           //   label: 'Favoritos',
